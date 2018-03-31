@@ -1,0 +1,16 @@
+diff --git a/pmdwin/pmdwin.cpp b/pmdwin/pmdwin.cpp
+index 242aafe..faf427d 100644
+--- a/pmdwin/pmdwin.cpp
++++ b/pmdwin/pmdwin.cpp
+@@ -5528,7 +5528,10 @@ void PMDWIN::fnumsetp(QQ *qq, int al)
+ 	
+ 	ax = psg_tune_data[bx];
+ 	if(cl > 0) {
+-		ax = (ax + 1) >> cl;
++		int carry;
++		ax >>= cl - 1;
++		carry = ax & 1;
++		ax = (ax >> 1) + carry;
+ 	}
+ 	
+ 	qq->fnum = ax;

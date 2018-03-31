@@ -1,0 +1,496 @@
+diff --git a/fmgen/file.cpp b/fmgen/file.cpp
+index 999af11..4ba4fc7 100644
+--- a/fmgen/file.cpp
++++ b/fmgen/file.cpp
+@@ -1,7 +1,7 @@
+ //	$Id: file.cpp,v 1.6 1999/12/28 11:14:05 cisc Exp $
+ 
+ #include "headers.h"
+-#include "File.h"
++#include "file.h"
+ 
+ // ---------------------------------------------------------------------------
+ //	ç\íz/è¡ñ≈
+diff --git a/fmgen/fmgen.h b/fmgen/fmgen.h
+index 309823c..9e3995d 100644
+--- a/fmgen/fmgen.h
++++ b/fmgen/fmgen.h
+@@ -7,7 +7,7 @@
+ #ifndef FM_GEN_H
+ #define FM_GEN_H
+ 
+-//#include "types.h"
++#include "types.h"
+ 
+ // ---------------------------------------------------------------------------
+ //	èoóÕÉTÉìÉvÉãÇÃå^
+diff --git a/fmgen/fmtimer.h b/fmgen/fmtimer.h
+index a0ec024..990ea10 100644
+--- a/fmgen/fmtimer.h
++++ b/fmgen/fmtimer.h
+@@ -7,6 +7,8 @@
+ #ifndef FM_TIMER_H
+ #define FM_TIMER_H
+ 
++#include "types.h"
++
+ // ---------------------------------------------------------------------------
+ 
+ namespace FM
+diff --git a/fmgen/psg.h b/fmgen/psg.h
+index 17923be..aa11003 100644
+--- a/fmgen/psg.h
++++ b/fmgen/psg.h
+@@ -7,6 +7,8 @@
+ #ifndef PSG_H
+ #define PSG_H
+ 
++#include "types.h"
++
+ #define PSG_SAMPLETYPE		int32		// int32 or int16
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/pmdwin/int64.h b/pmdwin/int64.h
+new file mode 100644
+index 0000000..ef2ee9c
+--- /dev/null
++++ b/pmdwin/int64.h
+@@ -0,0 +1,12 @@
++#ifndef INT64_H
++#define INT64_H
++
++#ifdef _MSC_VER
++typedef __int64 int64;
++typedef unsigned __int64 uint64;
++#else
++typedef long long int64;
++typedef unsigned long long uint64;
++#endif
++
++#endif // INT64_H
+diff --git a/pmdwin/opnaw.cpp b/pmdwin/opnaw.cpp
+index faf8c9b..8228694 100644
+--- a/pmdwin/opnaw.cpp
++++ b/pmdwin/opnaw.cpp
+@@ -12,7 +12,12 @@
+ #include	"util.h"
+ #include	"misc.h"
+ 
+-
++#ifndef _MSC_VER
++// in MSVC, defined in windef.h
++#ifndef min
++#define min(a,b) (((a) < (b)) ? (a) : (b))
++#endif
++#endif
+ 
+ // ---------------------------------------------------------------------------
+ //	Ç±ÇÃÉÜÉjÉbÉgÇ≈ê¸å`ï‚ä‘ÇçsÇ§èÍçáÇ…êÈåæÇ∑ÇÈ
+@@ -302,4 +307,4 @@ void OPNAW::ClearBuffer(void)
+ 	memset(ip_buffer, 0, sizeof(ip_buffer));
+ }
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/pmdwin/p86drv.cpp b/pmdwin/p86drv.cpp
+index 45a6289..fe99ca7 100644
+--- a/pmdwin/p86drv.cpp
++++ b/pmdwin/p86drv.cpp
+@@ -82,7 +82,7 @@ bool P86DRV::SetRate(uint r, bool ip)
+ 	rate = r;
+ 	interpolation = ip;
+ 
+-	_ontei = (uint)((unsigned _int64)ontei * srcrate / rate);
++	_ontei = (uint)((uint64)ontei * srcrate / rate);
+ 	addsize2 = (_ontei & 0xffff) >> 4;
+ 	addsize1 = _ontei >> 16;
+ 
+@@ -144,7 +144,7 @@ int P86DRV::Load(char *filename)
+ 		return _ERR_OPEN_P86_FILE;						//	ÉtÉ@ÉCÉãÇ™äJÇØÇ»Ç¢
+ 	}
+ 	
+-	_try{
++	{
+ 		size = (int)GetFileSize_s(filename);		// ÉtÉ@ÉCÉãÉTÉCÉY
+ 		fread(&_p86header, 1, sizeof(_p86header), fp);
+ 		
+@@ -164,6 +164,7 @@ int P86DRV::Load(char *filename)
+ 		
+ 		if(memcmp(&p86header, &p86header2, sizeof(p86header)) == 0) {
+ 			strcpy(p86_file, filename);
++			fclose(fp);
+ 			return _WARNING_P86_ALREADY_LOAD;		// ìØÇ∂ÉtÉ@ÉCÉã
+ 		}
+ 		
+@@ -177,6 +178,7 @@ int P86DRV::Load(char *filename)
+ 		size -= sizeof(_p86header);
+ 
+ 		if((p86_addr = (uchar *)malloc(size)) == NULL) {
++                        fclose(fp);
+ 			return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢
+ 		}
+ 
+@@ -185,9 +187,8 @@ int P86DRV::Load(char *filename)
+ 		//	ÉtÉ@ÉCÉãñºìoò^
+ 		strcpy(p86_file, filename);
+ 	
+-	} _finally {
+-		fclose(fp);
+ 	}
++	fclose(fp);
+ 	return _P86DRV_OK;
+ }
+ 
+@@ -247,7 +248,7 @@ bool P86DRV::SetOntei(int _srcrate, uint _ontei)
+ 	ontei = _ontei;
+ 	srcrate = ratetable[_srcrate];
+ 	
+-	_ontei = (uint)((unsigned _int64)_ontei * srcrate / rate);
++	_ontei = (uint)((uint64)_ontei * srcrate / rate);
+ 
+ 	addsize2 = (_ontei & 0xffff) >> 4;
+ 	addsize1 = _ontei >> 16;
+diff --git a/pmdwin/pcmmusdriver.h b/pmdwin/pcmmusdriver.h
+index 870af47..3a2bd83 100644
+--- a/pmdwin/pcmmusdriver.h
++++ b/pmdwin/pcmmusdriver.h
+@@ -69,6 +69,8 @@ interface IFMPMD : public IPCMMUSICDRIVER {
+ extern "C" {
+ #endif
+ 
++#ifdef _MSC_VER
++
+ // GUID of IPCmMUSICDRIVER Interface ID
+ interface	__declspec(uuid("9D4D6317-F40A-455E-9E2C-CB517556BA02")) IPCMMUSICDRIVER;	
+ 
+@@ -79,6 +81,26 @@ interface	__declspec(uuid("81977D60-9496-4F20-A3BB-19B19943DA6D")) IFMPMD;
+ const IID IID_IPCMMUSICDRIVER	= _uuidof(IPCMMUSICDRIVER);	// IPCMMUSICDRIVER Interface ID
+ const IID IID_IFMPMD			= _uuidof(IFMPMD);			// IFMPMD Interface ID
+ 
++#else
++
++const IID IID_IPCMMUSICDRIVER = {
++  0x9D4D6317, 0xF40A, 0x455E,
++  {
++    0x9E, 0x2C,
++    0xCB, 0x51, 0x75, 0x56, 0xBA, 0x02
++  }
++};
++
++const IID IID_IFMPMD = {
++  0x81977D60, 0x9496, 0x4F20,
++  {
++    0xA3, 0xBB,
++    0x19, 0xB1, 0x99, 0x43, 0xDA, 0x6D
++  }
++};
++
++#endif
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/pmdwin/pmdwin.cpp b/pmdwin/pmdwin.cpp
+index aa44d7f..d14d131 100644
+--- a/pmdwin/pmdwin.cpp
++++ b/pmdwin/pmdwin.cpp
+@@ -1937,7 +1937,7 @@ void PMDWIN::otodasi8(QQ *qq)
+ void PMDWIN::otodasiz(QQ *qq)
+ {
+ 	uint	cx;
+-	_int64	cx2;
++	int64	cx2;
+ 	int		ax;
+ 	
+ 	if((cx = qq->fnum) == 0) return;
+@@ -1955,7 +1955,7 @@ void PMDWIN::otodasiz(QQ *qq)
+ 	
+ 	ax += qq->detune;
+ 
+-	cx2 = cx + ((_int64)cx) / 256 * ax;
++	cx2 = cx + ((int64)cx) / 256 * ax;
+ 	if(cx2 > 0xffffffff) cx = 0xffffffff;
+ 	else if(cx2 < 0) cx = 0;
+ 	else cx = (uint)cx2;
+@@ -8490,10 +8490,10 @@ int WINAPI PMDWIN::getppzvoldown2(void)
+ //=============================================================================
+ void WINAPI PMDWIN::setpos(int pos)
+ {
+-	_int64	_pos;
++	int64	_pos;
+ 	int		us;
+ 
+-	_pos = (_int64)pos * 1000;			// (ms -> usec Ç÷ÇÃïœä∑)
++	_pos = (int64)pos * 1000;			// (ms -> usec Ç÷ÇÃïœä∑)
+ 
+ 	if(upos > _pos) {
+ 		mstart();
+diff --git a/pmdwin/pmdwin.h b/pmdwin/pmdwin.h
+index 793fb30..fe51f2f 100644
+--- a/pmdwin/pmdwin.h
++++ b/pmdwin/pmdwin.h
+@@ -12,10 +12,12 @@
+ #include "ppz8l.h"
+ #include "ppsdrv.h"
+ #include "p86drv.h"
+-#include "PCMMusDriver.h"
++#include "pcmmusdriver.h"
+ 
+ //#include "types.h"
+ 
++#include "int64.h"
++
+ 
+ //=============================================================================
+ //	ÉoÅ[ÉWÉáÉìèÓïÒ
+@@ -522,8 +524,8 @@ private:
+ 	
+ 	char	*pos2;						// buf Ç…ó]Ç¡ÇƒÇ¢ÇÈÉTÉìÉvÉãÇÃêÊì™à íu
+ 	int		us2;						// buf Ç…ó]Ç¡ÇƒÇ¢ÇÈÉTÉìÉvÉãêî
+-	_int64	upos;						// ââëtäJénÇ©ÇÁÇÃéûä‘(É s)
+-	_int64	fpos;						// fadeout2 äJénéûä‘
++	int64	upos;						// ââëtäJénÇ©ÇÁÇÃéûä‘(É s)
++	int64	fpos;						// fadeout2 äJénéûä‘
+ 	
+ 	uchar mdataarea[mdata_def*1024];
+ 	uchar vdataarea[voice_def*1024];		//@ïsóvÅH
+@@ -722,6 +724,8 @@ protected:
+ //	Interface ID(IID) & Class ID(CLSID)
+ //=============================================================================
+ 
++#ifdef _MSC_VER
++
+ // GUID of IPMDWIN Interface ID
+ interface	__declspec(uuid("C07008F4-CAE0-421C-B08F-D8B319AFA4B4")) IPMDWIN;	
+ 
+@@ -731,6 +735,25 @@ class		__declspec(uuid("97C7C3F0-35D8-4304-8C1B-AA926E7AEC5C")) PMDWIN;
+ const IID	IID_IPMDWIN		= _uuidof(IPMDWIN);	// IPMDWIN Interface ID
+ const CLSID	CLSID_PMDWIN	= _uuidof(PMDWIN);	// PMDWIN Class ID
+ 
++#else
++
++const IID IID_IPMDWIN = {
++  0xC07008F4, 0xCAE0, 0x421C,
++  {
++    0xB0, 0x8F,
++    0xD8, 0xB3, 0x19, 0xAF, 0xA4, 0xB4
++  }
++};
++
++const CLSID CLSID_PMDWIN = {
++  0x97C7C3F0, 0x35D8, 0x4304,
++  {
++    0x8C, 0x1B,
++    0xAA, 0x92, 0x6E, 0x7A, 0xEC, 0x5C
++  }
++};
++
++#endif
+ 
+ //============================================================================
+ //	DLL Export Functions
+diff --git a/pmdwin/ppsdrv.cpp b/pmdwin/ppsdrv.cpp
+index 2e033dc..4e15958 100644
+--- a/pmdwin/ppsdrv.cpp
++++ b/pmdwin/ppsdrv.cpp
+@@ -173,12 +173,13 @@ int PPSDRV::Load(char *filename)
+ 		return _ERR_OPEN_PPS_FILE;						//	ÉtÉ@ÉCÉãÇ™äJÇØÇ»Ç¢
+ 	}
+ 	
+-	_try{
++	{
+ 		size = (int)GetFileSize_s(filename);		// ÉtÉ@ÉCÉãÉTÉCÉY
+ 		fread(&ppsheader2, 1, sizeof(ppsheader2), fp);
+ 		
+ 		if(memcmp(&ppsheader, &ppsheader2, sizeof(ppsheader)) == 0) {
+ 			strcpy(pps_file, filename);
++			fclose(fp);
+ 			return _WARNING_PPS_ALREADY_LOAD;		// ìØÇ∂ÉtÉ@ÉCÉã
+ 		}
+ 		
+@@ -193,10 +194,12 @@ int PPSDRV::Load(char *filename)
+ 
+ 		if((pdst = dataarea1
+ 			= (Sample *)malloc(size * sizeof(Sample) * 2 / sizeof(uchar))) == NULL) {
++			fclose(fp);
+ 			return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢
+ 		}
+ 
+ 		if((psrc = psrc2 = (uchar *)malloc(size)) == NULL) {
++			fclose(fp);
+ 			return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢ÅiÉeÉìÉ|ÉâÉäÅj
+ 		}
+ 
+@@ -230,9 +233,8 @@ int PPSDRV::Load(char *filename)
+ 		//	ÉtÉ@ÉCÉãñºìoò^
+ 		strcpy(pps_file, filename);
+ 	
+-	} _finally {
+-		fclose(fp);
+ 	}
++	fclose(fp);
+ 
+ 	data_offset1 = data_offset2 = NULL;
+ 
+diff --git a/pmdwin/ppz8l.cpp b/pmdwin/ppz8l.cpp
+index ffd0ab1..14f38bb 100644
+--- a/pmdwin/ppz8l.cpp
++++ b/pmdwin/ppz8l.cpp
+@@ -12,6 +12,11 @@
+ #include	"util.h"
+ #include	"misc.h"
+ 
++#ifndef _MSC_VER
++#ifndef max
++#define max(a,b) (((a) > (b)) ? (a) : (b))
++#endif
++#endif
+ 
+ //-----------------------------------------------------------------------------
+ //	íËêîÉeÅ[ÉuÉã(ADPCM Volume Å® PPZ8 Volume)
+@@ -220,7 +225,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 		return _ERR_OPEN_PPZ_FILE;				//	ÉtÉ@ÉCÉãÇ™äJÇØÇ»Ç¢
+ 	}
+ 
+-	_try{
++	{
+ 		size = (int)GetFileSize_s(filename);	// ÉtÉ@ÉCÉãÉTÉCÉY
+ 
+ 		if(NOW_PCM_CATE) {	// PZI ì«Ç›çûÇ›
+@@ -228,6 +233,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 
+ 			if(memcmp(&PCME_WORK[bufnum], &pziheader, sizeof(PZIHEADER)) == 0) {
+ 				strcpy(PVI_FILE[bufnum], filename);
++				fclose(fp);
+ 				return _WARNING_PPZ_ALREADY_LOAD;		// ìØÇ∂ÉtÉ@ÉCÉã
+ 			}
+ 			
+@@ -239,6 +245,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 			}
+ 
+ 			if(strncmp(pziheader.header, "PZI", 3)) {
++				fclose(fp);
+ 				return _ERR_WRONG_PPZ_FILE;		// ÉfÅ[É^å`éÆÇ™à·Ç§
+ 			}
+ 		
+@@ -248,6 +255,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 
+ 			if((pdst = XMS_FRAME_ADR[bufnum]
+ 						= (uchar *)malloc(size)) == NULL) {
++				fclose(fp);
+ 				return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢
+ 			}
+ 
+@@ -288,6 +296,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 
+ 			if(memcmp(&PCME_WORK[bufnum]. pcmnum, &pziheader.pcmnum, sizeof(PZIHEADER)-0x20) == 0) {
+ 				strcpy(PVI_FILE[bufnum], filename);
++				fclose(fp);
+ 				return _WARNING_PPZ_ALREADY_LOAD;		// ìØÇ∂ÉtÉ@ÉCÉã
+ 			}
+ 
+@@ -299,6 +308,7 @@ int PPZ8::Load(char *filename, int bufnum)
+ 			}
+ 
+ 			if(strncmp(pviheader.header, "PVI", 3)) {
++				fclose(fp);
+ 				return _ERR_WRONG_PPZ_FILE;		// ÉfÅ[É^å`éÆÇ™à·Ç§
+ 			}
+ 		
+@@ -313,10 +323,12 @@ int PPZ8::Load(char *filename, int bufnum)
+ 
+ 			if((pdst = XMS_FRAME_ADR[bufnum]
+ 						= (uchar *)malloc(max(size, size2) * 2)) == NULL) {
++				fclose(fp);
+ 				return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢
+ 			}
+ 
+ 			if((psrc = psrc2 = (uchar *)malloc(max(size, size2))) == NULL) {
++				fclose(fp);
+ 				return _ERR_OUT_OF_MEMORY;			// ÉÅÉÇÉäÇ™ämï€Ç≈Ç´Ç»Ç¢ÅiÉeÉìÉ|ÉâÉäÅj
+ 			}
+ 
+@@ -350,9 +362,8 @@ int PPZ8::Load(char *filename, int bufnum)
+ 			pviflag[bufnum] = true;
+ 
+ 		}
+-	} _finally {
+-		fclose(fp);
+ 	}
++	fclose(fp);
+ 	return _PPZ8_OK;
+ }
+ 
+@@ -387,7 +398,7 @@ bool PPZ8::SetOntei(int ch, uint ontei)
+ 	channelwork[ch].PCM_ADDS_H = ontei >> 16;					
+ 
+ 	channelwork[ch].PCM_ADD_H = (int)(
+-			(_int64)((channelwork[ch].PCM_ADDS_H << 16) + channelwork[ch].PCM_ADDS_L)
++			(int64)((channelwork[ch].PCM_ADDS_H << 16) + channelwork[ch].PCM_ADDS_L)
+ 			* 2 * channelwork[ch].PCM_SORC_F / DIST_F);
+ 	channelwork[ch].PCM_ADD_L = channelwork[ch].PCM_ADD_H & 0xffff;
+ 	channelwork[ch].PCM_ADD_H = channelwork[ch].PCM_ADD_H >> 16;
+diff --git a/pmdwin/util.cpp b/pmdwin/util.cpp
+index 02086a3..4caea3e 100644
+--- a/pmdwin/util.cpp
++++ b/pmdwin/util.cpp
+@@ -11,7 +11,7 @@
+ //=============================================================================
+ //	ÉtÉ@ÉCÉãñºÇ≈é¶Ç≥ÇÍÇΩÉtÉ@ÉCÉãÇÃÉTÉCÉYÇéÊìæÇ∑ÇÈ
+ //=============================================================================
+-_int64 GetFileSize_s(char *filename)
++int64 GetFileSize_s(char *filename)
+ {
+ 	HANDLE	handle;
+ 	WIN32_FIND_DATA	FindFileData;
+@@ -20,7 +20,7 @@ _int64 GetFileSize_s(char *filename)
+ 		return -1;		// éÊìæïsâ¬
+ 	} else {
+ 		FindClose(handle);
+-		return (_int64)(FindFileData.nFileSizeHigh << 32) + FindFileData.nFileSizeLow; 
++		return (int64)(FindFileData.nFileSizeHigh << 32) + FindFileData.nFileSizeLow; 
+  	}
+ }
+ 
+@@ -211,7 +211,7 @@ char *zen2tohan(char *dest, const char *src)
+ 		"{",		/*	859b 	*/
+ 		"|",		/*	859c 	*/
+ 		"}",		/*	859d 	*/
+-		"Öû",		/*	859e 	*/
++		"\x85\x9e",	/*	859e 	*/
+ 		"°",		/*	859f 	*/
+ 		"¢",		/*	85a0 	*/
+ 		"£",		/*	85a1 	*/
+@@ -275,8 +275,8 @@ char *zen2tohan(char *dest, const char *src)
+ 		"›",		/*	85db 	*/
+ 		"ﬁ",		/*	85dc 	*/
+ 		"ﬂ",		/*	85dd 	*/
+-		"Öﬁ",		/*	85de 	*/
+-		"Öﬂ",		/*	85df 	*/
++		"\x85\xde",	/*	85de 	*/
++		"\x85\xdf",	/*	85df 	*/
+ 		"‹",		/*	85e0 	*/
+ 		"∂",		/*	85e1 	*/
+ 		"π",		/*	85e2 	*/
+diff --git a/pmdwin/util.h b/pmdwin/util.h
+index f50b533..53502c7 100644
+--- a/pmdwin/util.h
++++ b/pmdwin/util.h
+@@ -6,12 +6,14 @@
+ #ifndef UTIL_H
+ #define UTIL_H
+ 
++#include "int64.h"
++
+ typedef unsigned char uchar;
+ typedef unsigned short ushort;
+ 
+-_int64 GetFileSize_s(char *filename);
++int64 GetFileSize_s(char *filename);
+ char *tab2spc(char *dest, const char *src, int tabcolumn);
+ char *delesc(char *dest, const char *src);
+ char *zen2tohan(char *dest, const char *src);
+ 
+-#endif	UTIL_H
++#endif // UTIL_H

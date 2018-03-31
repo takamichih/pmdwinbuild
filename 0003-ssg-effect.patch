@@ -1,0 +1,22 @@
+diff --git a/pmdwin/pmdwin.cpp b/pmdwin/pmdwin.cpp
+index faf427d..848c2e7 100644
+--- a/pmdwin/pmdwin.cpp
++++ b/pmdwin/pmdwin.cpp
+@@ -1373,8 +1373,15 @@ void PMDWIN::effsweep(void)
+ 	
+ 	dl = effwork.eswnst;
+ 	effwork.eswnct = dl & 15;
+-	
+-	effwork.eswnhz += dl / 16;
++
++	// used to be "dl / 16"
++	// with negative value division is different from shifting right
++	// division: usually truncated towards zero (mandatory since c99)
++	//   same as x86 idiv
++	// shift: usually arithmetic shift
++	//   same as x86 sar
++
++	effwork.eswnhz += dl >> 4;
+ 	
+ 	opna.SetReg(6, effwork.eswnhz);
+ 	open_work.psnoi_last = effwork.eswnhz;

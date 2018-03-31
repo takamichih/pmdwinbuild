@@ -1,0 +1,137 @@
+diff --git a/fmgen/fmgen.cpp b/fmgen/fmgen.cpp
+index df3ca46..575fa12 100644
+--- a/fmgen/fmgen.cpp
++++ b/fmgen/fmgen.cpp
+@@ -340,7 +340,8 @@ void Operator::MakeTable()
+ 	}
+ 	while (p < cltable + FM_CLENTS)
+ 	{
+-		*p++ = p[-512] / 2;
++		*p = p[-512] / 2;
++		p++;
+ 	}
+ 
+ //	for (i=0; i<13*256; i++)
+diff --git a/fmgen/opna.cpp b/fmgen/opna.cpp
+index 6c560f0..07e41fa 100644
+--- a/fmgen/opna.cpp
++++ b/fmgen/opna.cpp
+@@ -1417,7 +1417,7 @@ void OPNA::RhythmMix(Sample* buffer, uint count)
+ 		for (int i=0; i<6; i++)
+ 		{
+ 			Rhythm& r = rhythm[i];
+-			if ((rhythmkey & (1 << i)) && r.level < 128)
++			if ((rhythmkey & (1 << i)) /* && r.level < 128 */ )
+ 			{
+ 				int db = Limit(rhythmtl+rhythmtvol+r.level+r.volume, 127, -31);
+ 				int vol = tltable[FM_TLPOS+(db << (FM_TLBITS-7))] >> 4;
+@@ -1787,7 +1787,7 @@ void OPNB::ADPCMAMix(Sample* buffer, uint count)
+ 		for (int i=0; i<6; i++)
+ 		{
+ 			ADPCMA& r = adpcma[i];
+-			if ((adpcmakey & (1 << i)) && r.level < 128)
++			if ((adpcmakey & (1 << i)) /* && r.level < 128 */ )
+ 			{
+ 				uint maskl = r.pan & 2 ? -1 : 0;
+ 				uint maskr = r.pan & 1 ? -1 : 0;
+diff --git a/pmdwin/pmdwin.cpp b/pmdwin/pmdwin.cpp
+index d14d131..242aafe 100644
+--- a/pmdwin/pmdwin.cpp
++++ b/pmdwin/pmdwin.cpp
+@@ -649,7 +649,7 @@ uchar * PMDWIN::panset(QQ *qq, uchar *si)
+ 
+ void PMDWIN::panset_main(QQ *qq, int al)
+ {
+-	qq->fmpan = (qq->fmpan & 0x3f) | (al << 6) & 0xc0;
++	qq->fmpan = (qq->fmpan & 0x3f) | ((al << 6) & 0xc0);
+ 	
+ 	if(pmdwork.partb == 3 && pmdwork.fmsel == 0) {
+ 		//	FM3の場合は 4つのパート総て設定
+@@ -3275,7 +3275,10 @@ uchar * PMDWIN::commandsm(QQ *qq, uchar *si)
+ 		case 0xf7 : si = comexloop(qq, si); break;
+ 		case 0xf6 : qq->partloop = si; break;
+ 		case 0xf5 : qq->shift = *(char *)si++; break;
+-		case 0xf4 : if((qq->volume+=16) < qq->volume) qq->volume = 255; break;
++		case 0xf4 : 
++			if (qq->volume < (INT_MAX - 16)) qq->volume += 16;
++			else qq->volume = 255;
++			break;
+ 		case 0xf3 : if(qq->volume < 16) qq->volume=0; else qq->volume-=16; break;
+ 		case 0xf2 : si = lfoset(qq, si); break;
+ 		case 0xf1 : si = lfoswitch(qq, si); break;
+@@ -3296,7 +3299,11 @@ uchar * PMDWIN::commandsm(QQ *qq, uchar *si)
+ 		//
+ 		case 0xe4 : si++; break;
+ 		//追加 for V2.3
+-		case 0xe3 : if((qq->volume += *si++) < qq->volume) qq->volume = 255; break;
++		case 0xe3 :
++			if (qq->volume < (INT_MAX - (*si))) qq->volume += (*si);
++			else qq->volume = 255;
++			si++;
++			break;
+ 		case 0xe2 :
+ 			if(qq->volume < *si) qq->volume = 0; else qq->volume -= *si;
+ 			si++;
+@@ -3412,7 +3419,10 @@ uchar * PMDWIN::commands8(QQ *qq, uchar *si)
+ 		case 0xf7 : si = comexloop(qq, si); break;
+ 		case 0xf6 : qq->partloop = si; break;
+ 		case 0xf5 : qq->shift = *(char *)si++; break;
+-		case 0xf4 : if((qq->volume+=16) < qq->volume) qq->volume = 255; break;
++		case 0xf4 :
++			if (qq->volume < (INT_MAX - 16)) qq->volume += 16;
++			else qq->volume = 255;
++			break;
+ 		case 0xf3 : if(qq->volume < 16) qq->volume=0; else qq->volume-=16; break;
+ 		case 0xf2 : si = lfoset(qq, si); break;
+ 		case 0xf1 : si = lfoswitch(qq, si); break;
+@@ -3433,7 +3443,11 @@ uchar * PMDWIN::commands8(QQ *qq, uchar *si)
+ 		//
+ 		case 0xe4 : si++; break;
+ 		//追加 for V2.3
+-		case 0xe3 : if((qq->volume += *si++) < qq->volume) qq->volume = 255; break;
++		case 0xe3 :
++			if (qq->volume < (INT_MAX - (*si))) qq->volume += (*si);
++			else qq->volume = 255;
++			si++;
++			break;
+ 		case 0xe2 :
+ 			if(qq->volume < *si) qq->volume = 0; else qq->volume -= *si;
+ 			si++;
+@@ -3534,7 +3548,10 @@ uchar * PMDWIN::commandsz(QQ *qq, uchar *si)
+ 		case 0xf7 : si = comexloop(qq, si); break;
+ 		case 0xf6 : qq->partloop = si; break;
+ 		case 0xf5 : qq->shift = *(char *)si++; break;
+-		case 0xf4 : if((qq->volume+=16) < qq->volume) qq->volume = 255; break;
++		case 0xf4 :
++			if (qq->volume < (INT_MAX - 16)) qq->volume += 16;
++			else qq->volume = 255;
++			break;
+ 		case 0xf3 : if(qq->volume < 16) qq->volume=0; else qq->volume-=16; break;
+ 		case 0xf2 : si = lfoset(qq, si); break;
+ 		case 0xf1 : si = lfoswitch(qq, si); break;
+@@ -3555,7 +3572,11 @@ uchar * PMDWIN::commandsz(QQ *qq, uchar *si)
+ 		//
+ 		case 0xe4 : si++; break;
+ 		//追加 for V2.3
+-		case 0xe3 : if((qq->volume += *si++) < qq->volume) qq->volume = 255; break;
++		case 0xe3 :
++			if (qq->volume < (INT_MAX - (*si))) qq->volume += (*si);
++			else qq->volume = 255;
++			si++;
++			break;
+ 		case 0xe2 :
+ 			if(qq->volume < *si) qq->volume = 0; else qq->volume -= *si;
+ 			si++;
+diff --git a/pmdwin/util.cpp b/pmdwin/util.cpp
+index 4caea3e..b4e1f7a 100644
+--- a/pmdwin/util.cpp
++++ b/pmdwin/util.cpp
+@@ -20,7 +20,7 @@ int64 GetFileSize_s(char *filename)
+ 		return -1;		// 取得不可
+ 	} else {
+ 		FindClose(handle);
+-		return (int64)(FindFileData.nFileSizeHigh << 32) + FindFileData.nFileSizeLow; 
++		return (((int64)(FindFileData.nFileSizeHigh)) << 32) + FindFileData.nFileSizeLow; 
+  	}
+ }
+ 
