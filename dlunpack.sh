@@ -14,6 +14,7 @@ function unpack {
       mv "${file}" "${sfile}"
     fi
   done
+  dos2unix *
   cd ..
 }
 
