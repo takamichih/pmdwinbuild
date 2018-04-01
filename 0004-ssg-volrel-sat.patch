@@ -1,0 +1,16 @@
+diff --git a/pmdwin/pmdwin.cpp b/pmdwin/pmdwin.cpp
+index 848c2e7..1f970d6 100644
+--- a/pmdwin/pmdwin.cpp
++++ b/pmdwin/pmdwin.cpp
+@@ -3048,8 +3048,9 @@ uchar * PMDWIN::commandsp(QQ *qq, uchar *si)
+ 		//
+ 		case 0xe4 : si++; break;
+ 		//’Ç‰Á for V2.3
+-		case 0xe3 : if((qq->volume + *si) < 16) qq->volume += *si; si++;break;
+-		case 0xe2 : if((qq->volume - *si) >= 0) qq->volume -= *si; si++;break;
++		// saturate
++		case 0xe3 : qq->volume += *si++; if (qq->volume > 15) qq->volume = 15; break;
++		case 0xe2 : qq->volume -= *si++; if (qq->volume < 0) qq->volume = 0; break;
+ 		//
+ 		case 0xe1 : si++; break;
+ 		case 0xe0 : si++; break;
