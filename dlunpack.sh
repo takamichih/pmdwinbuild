@@ -7,10 +7,6 @@ function unpack {
   for file in *; do
     sfile="$(echo "${file}" | tr A-Z a-z)"
     if [ "${file}" != "${sfile}" ] ; then
-      if [ -e "${sfile}" ] ; then
-        echo "cannot rename file to lowercase"
-        exit 1
-      fi
       mv "${file}" "${sfile}"
     fi
   done
