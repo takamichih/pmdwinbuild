@@ -18,9 +18,10 @@ For various reasons I didn't look at the pmdwin's source while reverse engineeri
 Because of licensing reasons (original license forbids redistribution of source and binary without permission) I only included the patches. The patches themselves are MIT license.
 
 # How to build
-  bash, wget, 7z, sha256sum, patch, Mingw-w64 i686 gcc is required.
+  bash, wget, 7z, sha256sum, dos2unix, patch, Mingw-w64 i686 gcc is required.
   Makefile assumes `i686-w64-mingw32-gcc` for gcc.
 
   1. `git clone $this_repo`
-  2. `make -j$whatever`
-  3. `pmdwin.dll` is generated under `build/` directory
+  1. `cd pmdwinbuild`
+  1. `make -j$whatever`
+  1. `pmdwin.dll` is generated under `build/` directory
