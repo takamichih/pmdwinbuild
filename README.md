@@ -17,6 +17,10 @@ For various reasons I didn't look at the pmdwin's source while reverse engineeri
 
     Fixes noise sweep (Example: SSG effect #6: `n6`, which is triggered by SSG rhythm @64 "Snare Drum 2"
 
+  * SSG relative volume saturation bug (`0004-ssg-volrel-sat.patch`)
+
+    Fixes SSG relative volume change (`) (` commands), previously ignored instead of saturating if the change is too large
+
 Because of licensing reasons (original license forbids redistribution of source and binary without permission) I only included the patches. The patches themselves are MIT license.
 
 ## How to build
