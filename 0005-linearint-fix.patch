@@ -1,0 +1,13 @@
+diff --git a/pmdwin/opnaw.cpp b/pmdwin/opnaw.cpp
+index 8228694..32c017b 100644
+--- a/pmdwin/opnaw.cpp
++++ b/pmdwin/opnaw.cpp
+@@ -272,7 +272,7 @@ void OPNAW::Mix(Sample* buffer, int nsamples)
+ 
+ 	if(interpolation2) {
+ 		while(nsamples > 0) {
+-			int nmixdata = min((delta + (nsamples - 1) * SOUND_55K_2 / rate2 * 16384) / 16384 + 1, IP_PCM_BUFFER_SIZE - 1);
++			int nmixdata = min((delta + (nsamples) * (SOUND_55K_2 * 16384 / rate2)) / 16384, IP_PCM_BUFFER_SIZE - 1);
+ 			memset(&ip_buffer[2], 0, sizeof(Sample) * 2 * nmixdata);
+ 			_Mix(&ip_buffer[2], nmixdata);
+ 
