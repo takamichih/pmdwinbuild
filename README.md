@@ -21,6 +21,10 @@ For various reasons I didn't look at the pmdwin's source while reverse engineeri
 
     Fixes SSG relative volume change (`) (` commands), previously ignored instead of saturating if the change is too large
 
+  * Linear interpolation bug (`0005-linearint-fix.patch`)
+
+    Fixes off-by-one error in `opnaw.cpp` causing glitches when using "internally generate with 55466Hz" mode, aliasing caused by limitations of linear interpolator itself is not fixed
+
 Because of licensing reasons (original license forbids redistribution of source and binary without permission) I only included the patches. The patches themselves are MIT license.
 
 ## How to build
