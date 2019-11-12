@@ -1,6 +1,8 @@
 # pmdwinbuild
 pmdwin を MinGW-w64 でビルドするためのパッチとおまけのバグフィクス
 
+バイナリ差分の配布を開始しました: https://github.com/takamichih/pmdwinbuild/releases
+
 自分で 98fmplayer のために pmd を解析していたこともあり様々な事情で pmdwin のソースを見るのは避けていたのですがこれを作ることにしました。
 
 * 最新の gcc でビルド可能 (Arch 上の i686-w64-mingw32-gcc 7.3.0 で確認)

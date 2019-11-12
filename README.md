@@ -1,6 +1,8 @@
 # pmdwinbuild
 scripts to build pmdwin using MinGW-w64 with patches to fix some of the bugs
 
+Binary diffs are now available: https://github.com/takamichih/pmdwinbuild/releases
+
 For various reasons I didn't look at the pmdwin's source while reverse engineering pmd for 98fmplayer, but I decided to create patches to build pmdwin.
 
 * Supports compiling under latest gcc (tested with i686-w64-mingw32-gcc 7.3.0 on Arch) instead of the ancient Visual C++ 6.0
